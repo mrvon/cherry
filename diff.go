@@ -38,7 +38,7 @@ func diffCommits(sourceBranch string, targetBranch string) []*object.Commit {
 		log.Fatal(err)
 	}
 	picked := make(map[string]bool)
-	err = targetIter.ForEach(func(c *object.Commit) error {
+	targetIter.ForEach(func(c *object.Commit) error {
 		picked[hashCommit(c)] = true
 		return nil
 	})
@@ -51,7 +51,7 @@ func diffCommits(sourceBranch string, targetBranch string) []*object.Commit {
 		log.Fatal(err)
 	}
 	commits := []*object.Commit{}
-	err = sourceIter.ForEach(func(c *object.Commit) error {
+	sourceIter.ForEach(func(c *object.Commit) error {
 		if !picked[hashCommit(c)] {
 			commits = append(commits, c)
 		}
@@ -70,7 +70,15 @@ func diff(a *cli.Context) {
 		if !strings.Contains(c.Author.String(), a.String("author")) {
 			continue
 		}
-		if !strings.Contains(c.Message, a.String("issue")) {
+		issues := strings.Split(a.String("issue"), ",")
+		find := false
+		for _, issue := range issues {
+			if strings.Contains(c.Message, issue) {
+				find = true
+				break
+			}
+		}
+		if !find {
 			continue
 		}
 		message := strings.Replace(c.Message, "\n", " ", -1)

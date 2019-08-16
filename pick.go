@@ -41,7 +41,15 @@ func pick(a *cli.Context) {
 		if !strings.Contains(c.Author.String(), a.String("author")) {
 			continue
 		}
-		if !strings.Contains(c.Message, a.String("issue")) {
+		issues := strings.Split(a.String("issue"), ",")
+		find := false
+		for _, issue := range issues {
+			if strings.Contains(c.Message, issue) {
+				find = true
+				break
+			}
+		}
+		if !find {
 			continue
 		}
 		log.Printf("Cherry-Pick %s\n", c.Hash.String())

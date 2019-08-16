@@ -27,7 +27,8 @@ func main() {
 					Name: "author",
 				},
 				cli.StringFlag{
-					Name: "issue",
+					Name:  "issue",
+					Usage: "\"1000,1001\"",
 				},
 			},
 		},
@@ -40,14 +41,11 @@ func main() {
 			},
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "author",
-					Value: "",
-					Usage: "author name",
+					Name: "author",
 				},
 				cli.StringFlag{
 					Name:  "issue",
-					Value: "",
-					Usage: "issue code",
+					Usage: "\"1000,1001\"",
 				},
 				cli.BoolFlag{
 					Name: "step",
