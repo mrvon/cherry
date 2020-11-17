@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -61,30 +63,56 @@ func diffCommits(sourceBranch string, targetBranch string) []*object.Commit {
 	return reverse(commits)
 }
 
-func diff(a *cli.Context) {
-	loc, _ := time.LoadLocation("Asia/Shanghai")
-	if a.NArg() < 2 {
-		log.Fatal("argument not enough")
-	}
+func filterCommits(a *cli.Context) []*object.Commit {
 	sourceBranch := a.Args().Get(0)
 	targetBranch := a.Args().Get(1)
+	commits := []*object.Commit{}
 	for _, c := range diffCommits(sourceBranch, targetBranch) {
 		if !strings.Contains(c.Author.String(), a.String("author")) {
 			continue
 		}
 		issues := strings.Split(a.String("issue"), ",")
-		find := false
+		found := false
 		for _, issue := range issues {
 			if strings.Contains(c.Message, issue) {
-				find = true
+				found = true
 				break
 			}
 		}
-		if !find {
+		if !found {
 			continue
 		}
-		message := strings.Replace(c.Message, "\n", " ", -1)
-		when := c.Author.When.In(loc)
-		fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
+		commits = append(commits, c)
+	}
+	return commits
+}
+
+func diff(a *cli.Context) {
+	if a.NArg() < 2 {
+		log.Fatal("argument not enough")
+	}
+	commits := filterCommits(a)
+	loc, _ := time.LoadLocation("Asia/Shanghai")
+	csvFile := a.String("csv")
+	if len(csvFile) > 0 {
+		f, err := os.Create(csvFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+		f.WriteString("\xEF\xBB\xBF")
+		w := csv.NewWriter(f)
+		for _, c := range commits {
+			message := strings.Replace(c.Message, "\n", " ", -1)
+			when := c.Author.When.In(loc)
+			w.Write([]string{c.Author.Name, fmt.Sprint(c.Hash), message, fmt.Sprint(when)})
+		}
+		w.Flush()
+	} else {
+		for _, c := range commits {
+			message := strings.Replace(c.Message, "\n", " ", -1)
+			when := c.Author.When.In(loc)
+			fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
+		}
 	}
 }

@@ -30,6 +30,9 @@ func main() {
 					Name:  "issue",
 					Usage: "\"1000,1001\"",
 				},
+				cli.StringFlag{
+					Name: "csv",
+				},
 			},
 		},
 		{
