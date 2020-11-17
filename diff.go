@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -61,6 +62,7 @@ func diffCommits(sourceBranch string, targetBranch string) []*object.Commit {
 }
 
 func diff(a *cli.Context) {
+	loc, _ := time.LoadLocation("Asia/Shanghai")
 	if a.NArg() < 2 {
 		log.Fatal("argument not enough")
 	}
@@ -82,6 +84,7 @@ func diff(a *cli.Context) {
 			continue
 		}
 		message := strings.Replace(c.Message, "\n", " ", -1)
-		fmt.Printf("%s\t%s\t%s\n", c.Hash, c.Author.Name, message)
+		when := c.Author.When.In(loc)
+		fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
 	}
 }

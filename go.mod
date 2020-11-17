@@ -1,5 +1,7 @@
 module github.com/mrvon/cherry
 
+go 1.15
+
 require (
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
