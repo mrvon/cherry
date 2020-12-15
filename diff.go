@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tealeg/xlsx"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
@@ -108,11 +109,39 @@ func diff(a *cli.Context) {
 			w.Write([]string{c.Author.Name, fmt.Sprint(c.Hash), message, fmt.Sprint(when)})
 		}
 		w.Flush()
-	} else {
+	}
+	xlsxFile := a.String("xlsx")
+	if len(xlsxFile) > 0 {
+		wb := xlsx.NewFile()
+		acMap := make(map[string][]*object.Commit)
 		for _, c := range commits {
-			message := strings.Replace(c.Message, "\n", " ", -1)
-			when := c.Author.When.In(loc)
-			fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
+			if _, exists := acMap[c.Author.Name]; !exists {
+				acMap[c.Author.Name] = []*object.Commit{}
+			}
+			acMap[c.Author.Name] = append(acMap[c.Author.Name], c)
 		}
+		for author, authorCommits := range acMap {
+			sh, err := wb.AddSheet(author)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for _, c := range authorCommits {
+				row := sh.AddRow()
+				authorCell := row.AddCell()
+				hashCell := row.AddCell()
+				msgCell := row.AddCell()
+				whenCell := row.AddCell()
+				authorCell.Value = c.Author.Name
+				hashCell.Value = fmt.Sprint(c.Hash)
+				msgCell.Value = strings.Replace(c.Message, "\n", " ", -1)
+				whenCell.Value = fmt.Sprint(c.Author.When.In(loc))
+			}
+		}
+		wb.Save(xlsxFile)
+	}
+	for _, c := range commits {
+		message := strings.Replace(c.Message, "\n", " ", -1)
+		when := c.Author.When.In(loc)
+		fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
 	}
 }

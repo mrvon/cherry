@@ -33,6 +33,9 @@ func main() {
 				cli.StringFlag{
 					Name: "csv",
 				},
+				cli.StringFlag{
+					Name: "xlsx",
+				},
 			},
 		},
 		{
