@@ -15,6 +15,8 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
+var CSTTimeZone = time.FixedZone("CST", 8*3600)
+
 func reverse(commits []*object.Commit) []*object.Commit {
 	left := 0
 	right := len(commits) - 1
@@ -93,7 +95,6 @@ func diff(a *cli.Context) {
 		log.Fatal("argument not enough")
 	}
 	commits := filterCommits(a)
-	loc, _ := time.LoadLocation("Asia/Shanghai")
 	csvFile := a.String("csv")
 	if len(csvFile) > 0 {
 		f, err := os.Create(csvFile)
@@ -105,7 +106,7 @@ func diff(a *cli.Context) {
 		w := csv.NewWriter(f)
 		for _, c := range commits {
 			message := strings.Replace(c.Message, "\n", " ", -1)
-			when := c.Author.When.In(loc)
+			when := c.Author.When.In(CSTTimeZone)
 			w.Write([]string{c.Author.Name, fmt.Sprint(c.Hash), message, fmt.Sprint(when)})
 		}
 		w.Flush()
@@ -134,14 +135,14 @@ func diff(a *cli.Context) {
 				authorCell.Value = c.Author.Name
 				hashCell.Value = fmt.Sprint(c.Hash)
 				msgCell.Value = strings.Replace(c.Message, "\n", " ", -1)
-				whenCell.Value = fmt.Sprint(c.Author.When.In(loc))
+				whenCell.Value = fmt.Sprint(c.Author.When.In(CSTTimeZone))
 			}
 		}
 		wb.Save(xlsxFile)
 	}
 	for _, c := range commits {
 		message := strings.Replace(c.Message, "\n", " ", -1)
-		when := c.Author.When.In(loc)
+		when := c.Author.When.In(CSTTimeZone)
 		fmt.Printf("%s\t%s\t%s\t%s\n", c.Hash, when, c.Author.Name, message)
 	}
 }
